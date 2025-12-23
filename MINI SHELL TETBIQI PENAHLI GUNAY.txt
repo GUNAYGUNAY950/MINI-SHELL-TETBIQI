@@ -1,0 +1,36 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <ctype.h>
+#include <sys/stat.h>
+
+#define MAX 256
+
+int stricmp(const char *a,const char *b){
+    while(*a&&*b) if(tolower(*a++)!=tolower(*b++)) return 0;
+    return *a=='\0'&&*b=='\0';
+}
+
+void ls(){DIR*d=opendir(".");struct dirent*dir;if(!d){perror("LS xətası");return;}while((dir=readdir(d)))printf("%s ",dir->d_name);printf("\n");closedir(d);}
+void copy(char*s,char*d){FILE*f1=fopen(s,"rb"),*f2=fopen(d,"wb");int c;if(!f1||!f2){printf("COPY xətası\n");if(f1)fclose(f1);if(f2)fclose(f2);return;}while((c=fgetc(f1))!=EOF)fputc(c,f2);fclose(f1);fclose(f2);printf("COPY: '%s'->'%s'\n",s,d);}
+void cd(char*dir){if(!dir){printf("CD: qovluq adı verin\n");return;}if(chdir(dir)!=0){if(mkdir(dir,0755)==0){printf("CD: '%s' yaradıldı\n",dir);chdir(dir);}else perror("CD xətası");}else printf("CD: '%s'-ə keçildi\n",dir);}
+
+int main(){
+    char in[MAX],pend[MAX]="",*cmd,*a1,*a2;
+    while(1){
+        printf("%s",strlen(pend)?"...> ":"mini-shell> ");
+        fgets(in,MAX,stdin); in[strcspn(in,"\n")]=0;
+        if(strlen(pend)){cmd=pend;a1=strtok(in," ");a2=strtok(NULL," ");pend[0]=0;}
+        else{cmd=strtok(in," ");a1=strtok(NULL," ");a2=strtok(NULL," ");}
+        if(!cmd) continue;
+        if(stricmp(cmd,"LS")) ls();
+        else if(stricmp(cmd,"CD")) cd(a1);
+        else if(stricmp(cmd,"COPY")){if(!a1||!a2){printf("COPY: mənbə və hədəf verin\n");strcpy(pend,"COPY");}else copy(a1,a2);}
+        else if(stricmp(cmd,"EXIT")){printf("Mini shell bağlandı.\n");break;}
+        else printf("Əmr tanınmadı!\n");
+    }
+    return 0;
+}
+
